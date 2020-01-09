@@ -2,8 +2,7 @@ import re
 import string
 import os, time
 import datetime
-
-
+import fileinput
 
 #regexINV = r"^(?:INV)\+(?:[^+\n]*\+){4}(\d{8})"
 #regexFal = r"^(?:FAL)\+(?:[^+\n]*\+){6}(\d{8})"
@@ -21,12 +20,10 @@ def getSegmentName(line):
     return line.split("+")[0]
     
     
-def getVersionNumber(line):
-    splittedLine = line.split("+")
-    #print("splitted INV line from get version function: ", splittedLine)
-    versionNumber = splittedLine[1][10]
-    print("version number from get version function: ", versionNumber)
-    return versionNumber
+def getVersionNumber(segments):
+    for segment in segments:
+        if getSegmentName(segment) == "UNH":
+            return segment.split("+")[2][6]
 
 
 
@@ -39,29 +36,34 @@ def subDate(line,days,indexNr):
     joinSplittedLine = '+'.join(map(str,splittedLine))
     print("joined splitted line: ", joinSplittedLine)
     return joinSplittedLine
-   
-
-#subbedDate = re.sub(pattern,newDate.strftime("%Y%m%d"),line)
-#print("subbed date: ", subbedDate)
 
 
-with open ("testedifact.edi", "r") as edifactile:
-    for line in edifactile:
-        segmmentName = getSegmentName(line)
+
+segmentsNew = []
+global segments  
+with open ("testedifact.edi" , "r+") as edifactile:
+    segments = edifactile.readlines()
+    versionNumber = getVersionNumber(segments)
+    for segment in segments:
+        segmmentName = getSegmentName(segment)
         if segmmentName == "INV":
-            versionNumber = getVersionNumber(line)
-            subDate(line, invDays, 5) 
-            #replace the line with the return value of subdate function        
+            segmentsNew.append(subDate(segment, invDays, 5))       
         elif segmmentName == "FAL":
             if (versionNumber == "1" or "2"):
-                subDate(line, falDays, 7)
+                segmentsNew.append(subDate(segment, invDays, 7)) 
             elif versionNumber > "2":
-                subDate(line, falDays, 6 )
+                segmentsNew.append(subDate(segment, invDays, 6)) 
         elif segmmentName == "DAT": 
-            subDate(line, datDays, 1)
-            
-              
-       
+            segmentsNew.append(subDate(segment, invDays, 1)) 
+        else:
+            segmentsNew.append(segment)
+edifactile.close()
+with open ("testedifact.edi" , "w") as edifactile:
+    print(segmentsNew)
+    edifactile.writelines(segmentsNew)
+edifactile.close()
+
+
         
 
 
