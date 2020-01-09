@@ -23,7 +23,7 @@ def getSegmentName(line):
     
 def getVersionNumber(line):
     splittedLine = line.split("+")
-    #print("splitted line from get version function: ", splittedLine)
+    #print("splitted INV line from get version function: ", splittedLine)
     versionNumber = splittedLine[1][10]
     print("version number from get version function: ", versionNumber)
     return versionNumber
@@ -34,17 +34,15 @@ def subDate(line,days,indexNr):
     splittedLine = line.split("+") 
     currentDate = splittedLine[indexNr] 
     dateUpdate = datetime.datetime.strptime(currentDate, '%Y%m%d').date() + datetime.timedelta(days = days)
+    print("date after strptime: ", dateUpdate)
     splittedLine[indexNr] = currentDate.replace(currentDate,dateUpdate.strftime('%Y%m%d'))
     joinSplittedLine = '+'.join(map(str,splittedLine))
-    print("join splitted line output: ", joinSplittedLine)
+    print("joined splitted line: ", joinSplittedLine)
     return joinSplittedLine
    
 
-
-
 #subbedDate = re.sub(pattern,newDate.strftime("%Y%m%d"),line)
 #print("subbed date: ", subbedDate)
-
 
 
 with open ("testedifact.edi", "r") as edifactile:
@@ -52,14 +50,17 @@ with open ("testedifact.edi", "r") as edifactile:
         segmmentName = getSegmentName(line)
         if segmmentName == "INV":
             versionNumber = getVersionNumber(line)
-            if versionNumber == "1":
-                subDate(line, invDays, 5)         
-        #elif segmmentName == "FAL": 
-            #subDate(line, regexFal, falDays)
-        #elif segmmentName == "DAT": 
-            #subDate(line, regexDat, datDays)
+            subDate(line, invDays, 5) 
+            #replace the line with the return value of subdate function        
+        elif segmmentName == "FAL":
+            if (versionNumber == "1" or "2"):
+                subDate(line, falDays, 7)
+            elif versionNumber > "2":
+                subDate(line, falDays, 6 )
+        elif segmmentName == "DAT": 
+            subDate(line, datDays, 1)
             
-            
+              
        
         
 
