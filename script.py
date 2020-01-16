@@ -12,9 +12,19 @@ import keyword
 path = input("Folder path:  " )
 path = path + "/"
 
-invDays = int(input("INV days: " ))
-falDays = int(input("FAL days: "))
-datDays = int(input("DAT days: "))
+
+while True:
+    try:
+        invDays = int(input("INV days: " ))
+        falDays = int(input("FAL days: "))
+        datDays = int(input("DAT days: "))
+    except ValueError:
+        print("Expected number")
+        continue
+    else:
+        break
+
+
 
 
 def getSegmentName(line): 
@@ -24,25 +34,27 @@ def getSegmentName(line):
 def getVersionNumber(segments):
     for segment in segments:
         if getSegmentName(segment) == "UNH":
-            return segment.split("+")[2][6]
+            return int(segment.split("+")[2][6])
 
 
 
 def subDate(line,days,indexNr):
     splittedLine = line.split("+") 
-    currentDate = splittedLine[indexNr] 
+    currentDate = splittedLine[indexNr]
+    print("Old date: ", currentDate) 
     dateUpdate = datetime.datetime.strptime(currentDate, '%Y%m%d').date() + datetime.timedelta(days = days)
-    print("date after strptime: ", dateUpdate)
+    print("New date: ", dateUpdate)
     splittedLine[indexNr] = currentDate.replace(currentDate,dateUpdate.strftime('%Y%m%d'))
     joinSplittedLine = '+'.join(map(str,splittedLine))
-    print("joined splitted line: ", joinSplittedLine)
+    #print("joined splitted line: ", joinSplittedLine)
+    print("New segment: ", joinSplittedLine)
     return joinSplittedLine
 
        
 directory = os.listdir(path)
 
 for file in directory:
-    print("file name:" , file) 
+    print("----------- file name:" , file , "-----------") 
     with open (path + file , "r+", encoding='utf-8-sig') as edifactile:
         segments = edifactile.readlines()
         versionNumber = getVersionNumber(segments)
@@ -52,10 +64,12 @@ for file in directory:
             if segmmentName == "INV":
                 segmentsNew.append(subDate(segment, invDays, 5))       
             elif segmmentName == "FAL":
-                if (versionNumber == "1" or "2"):
-                    segmentsNew.append(subDate(segment, invDays, 7)) 
-                elif versionNumber > "2":
-                    segmentsNew.append(subDate(segment, invDays, 6)) 
+                if versionNumber == 1:
+                    segmentsNew.append(subDate(segment, invDays, 7))
+                elif versionNumber == 2:
+                    segmentsNew.append(subDate(segment, invDays, 7))
+                elif versionNumber > 2:
+                    segmentsNew.append(subDate(segment, invDays, 6))
             elif segmmentName == "DAT": 
                 segmentsNew.append(subDate(segment, invDays, 1)) 
             else:
